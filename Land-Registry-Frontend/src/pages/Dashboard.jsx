@@ -60,7 +60,7 @@ const Dashboard = () => {
                 if (user.role === 'ADMIN' && activeTab === 'verify') {
                     data = await getPendingLands();
                 } else if (user.role === 'OWNER' && activeTab === 'my-lands') {
-                    data = await getMyLands(currentUserId);
+                    data = await getMyLands();
                 } else {
                     data = await getAllLands();
                 }
@@ -91,7 +91,7 @@ const Dashboard = () => {
 
     const handleRegister = async (data) => {
         try {
-            await registerLand({ ...data, ownerId: currentUserId });
+            await registerLand(data);
             alert("Land Registration Submitted successfully (Backend)!");
             setActiveTab('my-lands');
         } catch (e) {

@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // In a real app, you might want to load from DB to check if user is locked
             UserDetails userDetails = User.withUsername(username)
                     .password("") // Password not needed for token auth
-                    .roles(role)
+                    .roles("ROLE_" + role)
                     .build();
 
             if (jwtUtil.validateToken(jwt, username)) {

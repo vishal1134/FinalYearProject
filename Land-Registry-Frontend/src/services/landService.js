@@ -12,9 +12,9 @@ export const getAllLands = async () => {
     }
 };
 
-export const getMyLands = async (ownerId) => {
+export const getMyLands = async () => {
     try {
-        const response = await api.get(`/lands/my?ownerId=${ownerId}`);
+        const response = await api.get(`/lands/my`);
         return response.data;
     } catch (error) {
         return [];
@@ -42,5 +42,15 @@ export const verifyLand = async (id) => {
 
 export const initiateTransfer = async (transferData) => {
     const response = await api.post('/transfers', transferData);
+    return response.data;
+};
+
+export const verifyTransferDocuments = async (id) => {
+    const response = await api.put(`/transfers/${id}/verify-documents`);
+    return response.data;
+};
+
+export const approveTransfer = async (id) => {
+    const response = await api.put(`/transfers/${id}/approve`);
     return response.data;
 };

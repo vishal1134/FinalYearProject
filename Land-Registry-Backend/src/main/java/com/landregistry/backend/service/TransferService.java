@@ -47,6 +47,13 @@ public class TransferService {
             throw new RuntimeException("Transfer request is not pending");
         }
 
+<<<<<<< HEAD
+=======
+        if (!request.isDocumentsVerified()) {
+            throw new RuntimeException("Documents must be verified by admin before approval");
+        }
+
+>>>>>>> main
         Land land = landRepository.findById(request.getLandId())
                 .orElseThrow(() -> new RuntimeException("Land not found for transfer"));
 
@@ -55,6 +62,10 @@ public class TransferService {
         }
 
         land.setOwnerId(request.getBuyerId());
+<<<<<<< HEAD
+=======
+        land.setVerified(false); // Remove from public listings after transfer
+>>>>>>> main
         landRepository.save(land);
 
         historyService.logAction(land.getId(), request.getSellerId(), request.getBuyerId(), "TRANSFERRED");

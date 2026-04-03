@@ -17,4 +17,5 @@ public class TransferRequest {
     
     private String status; // PENDING, APPROVED, REJECTED
     private String requestDate;
+    private boolean documentsVerified = false;
 }
