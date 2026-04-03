@@ -16,6 +16,6 @@ public class User {
     
     private String password; // Hashed
     private String name;
-    private String role; // ADMIN, OWNER, PUBLIC
+    private Role role; // ADMIN, OWNER, PUBLIC
     private String nationalId;
 }

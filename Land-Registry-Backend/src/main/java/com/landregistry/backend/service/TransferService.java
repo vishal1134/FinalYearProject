@@ -32,12 +32,28 @@ public class TransferService {
         TransferRequest request = transferRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 
+        if (!"PENDING_APPROVAL".equals(request.getStatus())) {
+            throw new RuntimeException("Transfer request is not pending");
+        }
+
+        if (!request.isDocumentsVerified()) {
+            throw new RuntimeException("Documents must be verified by admin before approval");
+        }
+
+        Land land = landRepository.findById(request.getLandId())
+                .orElseThrow(() -> new RuntimeException("Land not found for transfer"));
+
+        if (!land.getOwnerId().equals(request.getSellerId())) {
+            throw new RuntimeException("Only current owner can transfer land");
+        }
+
+        land.setOwnerId(request.getBuyerId());
+        land.setVerified(false); // Remove from public listings after transfer
+        landRepository.save(land);
+
+        historyService.logAction(land.getId(), request.getSellerId(), request.getBuyerId(), "TRANSFERRED");
+
         request.setStatus("APPROVED_AND_COMMITTED");
-
-        // TODO:
-        // 1. Invoke Blockchain Chaincode 'transferLand'
-        // 2. Update Land owner in MongoDB (LandService)
-
         return transferRepository.save(request);
     }
 }

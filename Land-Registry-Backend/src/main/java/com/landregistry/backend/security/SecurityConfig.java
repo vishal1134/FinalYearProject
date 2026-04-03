@@ -35,9 +35,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Allow Login/Register
+                        .requestMatchers(HttpMethod.GET, "/api/lands/verified").permitAll() // Allow public access to verified lands
                         .requestMatchers(HttpMethod.GET, "/api/lands/pending").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/lands/*/verify").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/transfers/pending").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/transfers/*/verify-documents").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/transfers/*/approve").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

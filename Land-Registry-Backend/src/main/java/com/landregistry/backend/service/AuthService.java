@@ -3,6 +3,7 @@ package com.landregistry.backend.service;
 import com.landregistry.backend.dto.AuthResponse;
 import com.landregistry.backend.dto.LoginRequest;
 import com.landregistry.backend.dto.RegisterRequest;
+import com.landregistry.backend.model.Role;
 import com.landregistry.backend.model.User;
 import com.landregistry.backend.repository.UserRepository;
 import com.landregistry.backend.security.JwtUtil;
@@ -38,7 +39,7 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole());
+        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
         return new AuthResponse(token, savedUser.getName(), savedUser.getRole(), savedUser.getId());
     }
 
@@ -50,7 +51,7 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         return new AuthResponse(token, user.getName(), user.getRole(), user.getId());
     }
 
