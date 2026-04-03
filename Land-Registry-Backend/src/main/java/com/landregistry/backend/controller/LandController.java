@@ -21,8 +21,18 @@ public class LandController {
 
     @PostMapping
     public ResponseEntity<Land> registerLand(@RequestBody Land land, @AuthenticationPrincipal UserDetails userDetails) {
-        // In real implementations, extract user ID from userDetails or lookup via username
-        return ResponseEntity.ok(landService.registerLand(land));
+        if (userDetails != null && (land.getOwnerId() == null || land.getOwnerId().isEmpty())) {
+            // We store username locally if user details don't provide user ID, assuming email maps to user
+            land.setOwnerId(userDetails.getUsername());
+        }
+
+        Land savedLand = landService.registerLand(land);
+        return ResponseEntity.ok(savedLand);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Land>> getAllLands() {
+        return ResponseEntity.ok(landService.getAllLands());
     }
 
     @GetMapping("/verified")
