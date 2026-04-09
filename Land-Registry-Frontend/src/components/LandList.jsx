@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MapPin, CheckCircle, Clock } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { MapPin, CheckCircle, Clock, ImageOff } from 'lucide-react';
 import HistoryModal from './HistoryModal';
 
 const LandList = ({ lands, role, onVerify, onTransfer }) => {
@@ -23,7 +23,10 @@ const LandList = ({ lands, role, onVerify, onTransfer }) => {
                                 <img src={land.imageUrl} alt="Land" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700">
-                                    No Image
+                                    <div className="text-center">
+                                        <ImageOff className="w-8 h-8 mx-auto mb-2" />
+                                        <p className="text-sm">No land image URL</p>
+                                    </div>
                                 </div>
                             )}
                             <div className="absolute top-2 right-2">
@@ -51,7 +54,7 @@ const LandList = ({ lands, role, onVerify, onTransfer }) => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-gray-400">Price</p>
-                                    <p className="font-semibold text-blue-600 dark:text-blue-400">₹{land.price.toLocaleString()}</p>
+                                    <p className="font-semibold text-blue-600 dark:text-blue-400">INR {Number(land.price || 0).toLocaleString()}</p>
                                 </div>
                             </div>
 

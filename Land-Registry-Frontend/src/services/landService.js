@@ -35,14 +35,48 @@ export const registerLand = async (landData) => {
     return response.data;
 };
 
+export const uploadLandDocument = async (landId, file, documentType = 'PROOF', transferRequestId = '') => {
+    const formData = new FormData();
+    formData.append('landId', landId);
+    formData.append('documentType', documentType);
+    formData.append('file', file);
+
+    if (transferRequestId) {
+        formData.append('transferRequestId', transferRequestId);
+    }
+
+    const response = await api.post('/documents', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+
+    return response.data;
+};
+
 export const verifyLand = async (id) => {
     const response = await api.put(`/lands/${id}/verify`);
     return response.data;
 };
 
 export const initiateTransfer = async (transferData) => {
-    const response = await api.post('/transfers', transferData);
-    return response.data;
+    try {
+        const response = await api.post('/transfers', transferData);
+        return response.data;
+    } catch (error) {
+        const responseData = error.response?.data;
+        throw new Error(responseData?.message || 'Transfer request failed');
+    }
+};
+
+export const getPendingTransfers = async () => {
+    try {
+        const response = await api.get('/transfers/pending');
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching pending transfers", error);
+        return [];
+    }
 };
 
 export const verifyTransferDocuments = async (id) => {
@@ -50,7 +84,12 @@ export const verifyTransferDocuments = async (id) => {
     return response.data;
 };
 
-export const approveTransfer = async (id) => {
-    const response = await api.put(`/transfers/${id}/approve`);
+export const approveTransfer = async (id, adminRemarks = '') => {
+    const response = await api.put(`/transfers/${id}/approve`, { adminRemarks });
+    return response.data;
+};
+
+export const rejectTransfer = async (id, adminRemarks = '') => {
+    const response = await api.put(`/transfers/${id}/reject`, { adminRemarks });
     return response.data;
 };

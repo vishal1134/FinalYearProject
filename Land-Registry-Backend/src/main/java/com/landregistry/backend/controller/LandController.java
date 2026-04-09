@@ -1,5 +1,6 @@
 package com.landregistry.backend.controller;
 
+import com.landregistry.backend.dto.PublicLandDTO;
 import com.landregistry.backend.model.Land;
 import com.landregistry.backend.model.User;
 import com.landregistry.backend.repository.UserRepository;
@@ -26,20 +27,6 @@ public class LandController {
 
     @PostMapping
     public ResponseEntity<Land> registerLand(@RequestBody Land land, @AuthenticationPrincipal UserDetails userDetails) {
-<<<<<<< HEAD
-        if (userDetails != null && (land.getOwnerId() == null || land.getOwnerId().isEmpty())) {
-            // We store username locally if user details don't provide user ID, assuming email maps to user
-            land.setOwnerId(userDetails.getUsername());
-        }
-
-        Land savedLand = landService.registerLand(land);
-        return ResponseEntity.ok(savedLand);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Land>> getAllLands() {
-        return ResponseEntity.ok(landService.getAllLands());
-=======
         if (userDetails != null) {
             Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
             if (user.isPresent()) {
@@ -49,12 +36,26 @@ public class LandController {
             }
         }
         return ResponseEntity.ok(landService.registerLand(land));
->>>>>>> main
     }
 
     @GetMapping("/verified")
-    public ResponseEntity<List<Land>> getVerifiedLands() {
-        return ResponseEntity.ok(landService.getVerifiedLands());
+    public ResponseEntity<List<PublicLandDTO>> getVerifiedLands() {
+        return ResponseEntity.ok(landService.getVerifiedLands().stream()
+                .map(land -> new PublicLandDTO(
+                        land.getId(),
+                        land.getSurveyNumber(),
+                        land.getVillage(),
+                        land.getDistrict(),
+                        land.getArea(),
+                        land.getPrice(),
+                        land.getLandType(),
+                        land.getVerificationStatus(),
+                        land.isVerified(),
+                        land.getLatitude(),
+                        land.getLongitude(),
+                        land.getImageUrl()
+                ))
+                .toList());
     }
     
     @GetMapping("/pending")
@@ -72,7 +73,11 @@ public class LandController {
     }
 
     @PutMapping("/{id}/verify")
-    public ResponseEntity<Land> verifyLand(@PathVariable String id) {
-        return ResponseEntity.ok(landService.verifyLand(id));
+    public ResponseEntity<Land> verifyLand(@PathVariable String id, @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
+        if (user.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+        return ResponseEntity.ok(landService.verifyLand(id, user.get().getId()));
     }
 }

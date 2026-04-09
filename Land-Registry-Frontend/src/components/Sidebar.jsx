@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, FileCheck, PlusCircle, Search, LogOut, Map, BarChart } from 'lucide-react';
+import { LayoutDashboard, FileCheck, PlusCircle, Search, LogOut, Map, BarChart, ClipboardCheck } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, isOpen }) => {
     const { user, logout } = useAuth();
@@ -10,6 +10,7 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen }) => {
         { id: 'analytics', label: 'Analytics', icon: BarChart, roles: ['ADMIN', 'OWNER', 'PUBLIC'] },
         { id: 'map-view', label: 'Map Search', icon: Map, roles: ['ADMIN', 'OWNER', 'PUBLIC'] },
         { id: 'verify', label: 'Verify Lands', icon: FileCheck, roles: ['ADMIN'] },
+        { id: 'transfers', label: 'Approve Transfers', icon: ClipboardCheck, roles: ['ADMIN'] },
         { id: 'my-lands', label: 'My Lands', icon: FileCheck, roles: ['OWNER'] },
         { id: 'add-land', label: 'Add Land', icon: PlusCircle, roles: ['OWNER'] },
         { id: 'search', label: 'Search Records', icon: Search, roles: ['PUBLIC', 'ADMIN', 'OWNER'] },

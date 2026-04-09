@@ -7,10 +7,9 @@ const TransferModal = ({ land, isOpen, onClose, onConfirm }) => {
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onConfirm(land.id, { buyerId, salePrice });
-        onClose();
+        await onConfirm({ buyerId: buyerId.trim(), salePrice: Number(salePrice) });
     };
 
     return (
@@ -34,13 +33,13 @@ const TransferModal = ({ land, isOpen, onClose, onConfirm }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Buyer ID (Email/User ID)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Buyer Email or User ID</label>
                         <input
                             type="text"
                             value={buyerId}
                             onChange={(e) => setBuyerId(e.target.value)}
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            placeholder="e.g. buyer@example.com"
+                            placeholder="e.g. owner2@gmail.com"
                             required
                         />
                     </div>

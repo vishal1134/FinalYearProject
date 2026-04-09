@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface LandHistoryRepository extends MongoRepository<LandHistory, String> {
     List<LandHistory> findByLandIdOrderByTimestampDesc(String landId);
+    List<LandHistory> findByLandIdOrderByTimestampAsc(String landId);
 }

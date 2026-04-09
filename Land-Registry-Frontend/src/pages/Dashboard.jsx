@@ -8,14 +8,19 @@ import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import Chatbot from '../components/Chatbot';
 import TransferModal from '../components/TransferModal';
 import { useAuth } from '../context/AuthContext';
-import { getAllLands, getMyLands, getPendingLands, registerLand, verifyLand, initiateTransfer } from '../services/landService';
-
-// Fallback Mock Data for demo when backend is offline
-const MOCK_LANDS = [
-    { id: '1', surveyNumber: '101/A', village: 'Sriperumbudur', district: 'Kanchipuram', area: 2400, price: 5000000, verified: true, ownerId: '1' },
-    { id: '2', surveyNumber: '205/B', village: 'Oragadam', district: 'Kanchipuram', area: 1200, price: 2500000, verified: false, ownerId: '1' },
-    { id: '3', surveyNumber: '330/C', village: 'Tambaram', district: 'Chennai', area: 1800, price: 8500000, verified: true, ownerId: '2' }
-];
+import {
+    getAllLands,
+    getMyLands,
+    getPendingLands,
+    getPendingTransfers,
+    registerLand,
+    verifyLand,
+    initiateTransfer,
+    uploadLandDocument,
+    verifyTransferDocuments,
+    approveTransfer,
+    rejectTransfer
+} from '../services/landService';
 
 const StatsCard = ({ title, value, color }) => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
@@ -24,26 +29,123 @@ const StatsCard = ({ title, value, color }) => (
     </div>
 );
 
-const Overview = ({ user, lands }) => {
+const Overview = ({ user, lands, stats }) => {
     return (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Welcome back, {user?.name}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatsCard title="Total Lands Verified" value={lands.filter(l => l.verified).length} color="text-blue-600 dark:text-blue-400" />
-                <StatsCard title="Pending Transfers" value="12" color="text-orange-600 dark:text-orange-400" />
-                <StatsCard title="My Properties" value={lands.filter(l => l.ownerId === user?.id || l.ownerId === '1').length} color="text-emerald-600 dark:text-emerald-400" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <StatsCard title="Total Lands Verified" value={stats.verifiedLands} color="text-blue-600 dark:text-blue-400" />
+                <StatsCard title="Pending Verifications" value={stats.pendingVerifications} color="text-orange-600 dark:text-orange-400" />
+                <StatsCard title="My Properties" value={stats.myProperties} color="text-emerald-600 dark:text-emerald-400" />
+                <StatsCard title="Pending Transfers" value={stats.pendingTransfers} color="text-indigo-600 dark:text-indigo-400" />
             </div>
         </div>
     )
 }
 
+const TransferApprovalList = ({ transfers, onVerifyDocuments, onApprove, onReject }) => {
+    if (!transfers.length) {
+        return (
+            <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 text-gray-600 dark:text-gray-300">
+                No pending transfer requests.
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {transfers.map((transfer) => (
+                <div key={transfer.id} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-5 shadow-sm">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Land Transfer</p>
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                                Survey {transfer.land?.surveyNumber || 'Unknown'}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                {transfer.land?.village || 'Unknown village'}, {transfer.land?.district || 'Unknown district'}
+                            </p>
+                        </div>
+                        <span className="px-3 py-1 text-xs rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                            {transfer.status || 'PENDING_APPROVAL'}
+                        </span>
+                    </div>
+
+                    <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Seller</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{transfer.seller?.name || 'Unknown seller'}</p>
+                                <p className="break-all">{transfer.seller?.email || 'No email available'}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Buyer</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{transfer.buyer?.name || 'Unknown buyer'}</p>
+                                <p className="break-all">{transfer.buyer?.email || 'No email available'}</p>
+                            </div>
+                        </div>
+                        <p><span className="font-medium">Sale Price:</span> INR {Number(transfer.salePrice || 0).toLocaleString()}</p>
+                        <p><span className="font-medium">Transfer Type:</span> {transfer.transferType || 'FULL_TRANSFER'}</p>
+                        <p><span className="font-medium">Share:</span> {transfer.sharePercentage || 100}%</p>
+                        <p><span className="font-medium">Area:</span> {transfer.land?.area || 0} sq.ft</p>
+                        <p><span className="font-medium">Documents:</span> {transfer.documentsVerified ? 'Verified' : 'Waiting for admin verification'}</p>
+                        <details className="text-xs text-gray-500 dark:text-gray-400">
+                            <summary className="cursor-pointer">Technical IDs</summary>
+                            <div className="mt-2 space-y-1">
+                                <p className="break-all">Transfer: {transfer.id}</p>
+                                <p className="break-all">Land: {transfer.land?.id}</p>
+                                <p className="break-all">Seller: {transfer.seller?.id}</p>
+                                <p className="break-all">Buyer: {transfer.buyer?.id}</p>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                        {!transfer.documentsVerified && (
+                            <button
+                                onClick={() => onVerifyDocuments(transfer.id)}
+                                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
+                            >
+                                Verify Documents
+                            </button>
+                        )}
+                        <button
+                            onClick={() => onApprove(transfer.id)}
+                            disabled={!transfer.documentsVerified}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium ${transfer.documentsVerified
+                                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                : 'bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
+                                }`}
+                        >
+                            Approve Transfer
+                        </button>
+                        <button
+                            onClick={() => onReject(transfer.id)}
+                            className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm font-medium"
+                        >
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [lands, setLands] = useState([]); // Start empty, fetch on load
+    const [transferRequests, setTransferRequests] = useState([]);
     const [selectedLand, setSelectedLand] = useState(null);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [stats, setStats] = useState({
+        verifiedLands: 0,
+        pendingVerifications: 0,
+        myProperties: 0,
+        pendingTransfers: 0
+    });
 
     const { user } = useAuth();
     const currentUserId = user?.id;
@@ -57,30 +159,37 @@ const Dashboard = () => {
             try {
                 let data = [];
                 // 1. Attempt to fetch from Backend API
-                if (user.role === 'ADMIN' && activeTab === 'verify') {
+                if (activeTab === 'overview') {
+                    const [verifiedLands, pendingLands, myLands, pendingTransfers] = await Promise.all([
+                        getAllLands(),
+                        user.role === 'ADMIN' ? getPendingLands() : Promise.resolve([]),
+                        user.role === 'OWNER' ? getMyLands() : Promise.resolve([]),
+                        user.role === 'ADMIN' ? getPendingTransfers() : Promise.resolve([])
+                    ]);
+
+                    setStats({
+                        verifiedLands: verifiedLands.length,
+                        pendingVerifications: pendingLands.length,
+                        myProperties: myLands.length,
+                        pendingTransfers: pendingTransfers.length
+                    });
+
+                    data = user.role === 'OWNER' ? myLands : [...verifiedLands, ...pendingLands];
+                    setTransferRequests(pendingTransfers);
+                } else if (user.role === 'ADMIN' && activeTab === 'verify') {
                     data = await getPendingLands();
-                } else if (user.role === 'OWNER' && activeTab === 'my-lands') {
+                } else if (user.role === 'ADMIN' && activeTab === 'transfers') {
+                    setTransferRequests(await getPendingTransfers());
+                } else if (user.role === 'OWNER' && (activeTab === 'my-lands' || activeTab === 'map-view')) {
                     data = await getMyLands();
                 } else {
                     data = await getAllLands();
                 }
 
-                // 2. Fallback to MOCK if API returns empty and we are in "Mock/Demo Mode"
-                if ((!data || data.length === 0)) {
-                    console.log("Using Fallback Mock Data");
-                    if (activeTab === 'verify') {
-                        data = MOCK_LANDS.filter(l => !l.verified);
-                    } else if (activeTab === 'my-lands') {
-                        data = MOCK_LANDS.filter(l => l.ownerId === '1' || l.ownerId === currentUserId);
-                    } else {
-                        data = MOCK_LANDS.filter(l => l.verified);
-                    }
-                }
-
-                setLands(data);
+                setLands(data || []);
             } catch (err) {
                 console.error("Fetch failed", err);
-                setLands(MOCK_LANDS.filter(l => l.verified));
+                setLands([]);
             } finally {
                 setLoading(false);
             }
@@ -91,15 +200,20 @@ const Dashboard = () => {
 
     const handleRegister = async (data) => {
         try {
-            await registerLand(data);
-            alert("Land Registration Submitted successfully (Backend)!");
+            const { document, ...landPayload } = data;
+            const savedLand = await registerLand(landPayload);
+
+            if (document) {
+                await uploadLandDocument(savedLand.id, document, 'PROOF');
+            }
+
+            alert(document
+                ? "Land registration and document upload submitted successfully!"
+                : "Land registration submitted successfully!");
             setActiveTab('my-lands');
         } catch (e) {
-            console.warn("Backend unavailable, using mock fallback");
-            const newLand = { ...data, id: Date.now().toString(), verified: false, ownerId: currentUserId };
-            setLands([...lands, newLand]);
-            alert("Land Registration Submitted (Mock Mode)!");
-            setActiveTab('my-lands');
+            console.error("Land registration failed", e);
+            alert("Land registration failed. Please confirm the backend is running and try again.");
         }
     };
 
@@ -109,9 +223,8 @@ const Dashboard = () => {
             alert("Land Verified (Backend)!");
             setLands(prev => prev.filter(l => l.id !== id));
         } catch (e) {
-            console.warn("Backend unavailable, using mock fallback");
-            setLands(lands.map(l => l.id === id ? { ...l, verified: true } : l));
-            alert("Land Verified (Mock Mode)!");
+            console.error("Land verification failed", e);
+            alert("Land verification failed. Please confirm the backend is running and try again.");
         }
     };
 
@@ -126,9 +239,48 @@ const Dashboard = () => {
             alert("Transfer Request Initiated (Backend)!");
             setIsTransferModalOpen(false);
         } catch (e) {
-            console.warn("Backend unavailable");
-            alert("Transfer Request Initiated (Mock Mode)!");
+            console.error("Transfer request failed", e);
+            alert(e.message || "Transfer request failed. Please confirm the backend is running and try again.");
             setIsTransferModalOpen(false);
+        }
+    };
+
+    const refreshPendingTransfers = async () => {
+        const pendingTransfers = await getPendingTransfers();
+        setTransferRequests(pendingTransfers);
+        setStats(prev => ({ ...prev, pendingTransfers: pendingTransfers.length }));
+    };
+
+    const handleVerifyTransferDocuments = async (id) => {
+        try {
+            await verifyTransferDocuments(id);
+            alert("Transfer documents verified.");
+            await refreshPendingTransfers();
+        } catch (e) {
+            console.error("Transfer document verification failed", e);
+            alert(e.response?.data?.message || e.message || "Transfer document verification failed.");
+        }
+    };
+
+    const handleApproveTransfer = async (id) => {
+        try {
+            await approveTransfer(id, "Approved by registrar");
+            alert("Transfer approved and ownership committed.");
+            await refreshPendingTransfers();
+        } catch (e) {
+            console.error("Transfer approval failed", e);
+            alert(e.response?.data?.message || e.message || "Transfer approval failed. Verify documents before approval.");
+        }
+    };
+
+    const handleRejectTransfer = async (id) => {
+        try {
+            await rejectTransfer(id, "Rejected by registrar");
+            alert("Transfer rejected.");
+            await refreshPendingTransfers();
+        } catch (e) {
+            console.error("Transfer rejection failed", e);
+            alert(e.response?.data?.message || e.message || "Transfer rejection failed.");
         }
     };
 
@@ -154,7 +306,7 @@ const Dashboard = () => {
                 <main className="p-4 md:p-8">
                     {loading && <p className="text-center text-blue-600 dark:text-blue-400 mb-4">Syncing with blockchain...</p>}
 
-                    {activeTab === 'overview' && <Overview user={user} lands={lands} />}
+                    {activeTab === 'overview' && <Overview user={user} lands={lands} stats={stats} />}
 
                     {activeTab === 'verify' && (
                         <div className="animate-fade-in">
@@ -163,6 +315,18 @@ const Dashboard = () => {
                                 lands={lands}
                                 role={user?.role}
                                 onVerify={handleVerify}
+                            />
+                        </div>
+                    )}
+
+                    {activeTab === 'transfers' && (
+                        <div className="animate-fade-in">
+                            <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Pending Transfer Approvals</h1>
+                            <TransferApprovalList
+                                transfers={transferRequests}
+                                onVerifyDocuments={handleVerifyTransferDocuments}
+                                onApprove={handleApproveTransfer}
+                                onReject={handleRejectTransfer}
                             />
                         </div>
                     )}

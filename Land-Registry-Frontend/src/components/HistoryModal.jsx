@@ -5,6 +5,7 @@ import api from '../services/api';
 const HistoryModal = ({ isOpen, onClose, landId }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         if (isOpen && landId) {
@@ -14,14 +15,24 @@ const HistoryModal = ({ isOpen, onClose, landId }) => {
 
     const fetchHistory = async () => {
         setLoading(true);
+        setErrorMessage('');
         try {
             const response = await api.get(`/history/${landId}`);
             setHistory(response.data);
         } catch (error) {
             console.error("Failed to fetch history", error);
+            setHistory([]);
+            setErrorMessage(error.response?.data?.message || 'Unable to load ownership history.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const formatOwners = (owners) => {
+        if (!owners || owners.length === 0) {
+            return 'None';
+        }
+        return owners.map(owner => `${owner.userId} (${owner.sharePercentage}%)`).join(', ');
     };
 
     if (!isOpen) return null;
@@ -42,6 +53,8 @@ const HistoryModal = ({ isOpen, onClose, landId }) => {
                 <div className="p-6 max-h-[60vh] overflow-y-auto">
                     {loading ? (
                         <div className="text-center py-8 text-gray-500">Loading history...</div>
+                    ) : errorMessage ? (
+                        <div className="text-center py-8 text-red-500">{errorMessage}</div>
                     ) : history.length === 0 ? (
                         <div className="text-center py-8 text-gray-400">No history found for this property.</div>
                     ) : (
@@ -69,7 +82,19 @@ const HistoryModal = ({ isOpen, onClose, landId }) => {
                                                     <span className="font-medium">{record.newOwnerId}</span>
                                                 </div>
                                             )}
-                                            {!record.previousOwnerId && !record.newOwnerId && (
+                                            {record.previousOwners && record.previousOwners.length > 0 && (
+                                                <div className="mb-1">
+                                                    <span className="text-red-400 text-xs">From:</span>
+                                                    <span className="ml-2 font-medium break-all">{formatOwners(record.previousOwners)}</span>
+                                                </div>
+                                            )}
+                                            {record.newOwners && record.newOwners.length > 0 && (
+                                                <div>
+                                                    <span className="text-green-500 text-xs">To:</span>
+                                                    <span className="ml-2 font-medium break-all">{formatOwners(record.newOwners)}</span>
+                                                </div>
+                                            )}
+                                            {!record.previousOwnerId && !record.newOwnerId && !record.previousOwners?.length && !record.newOwners?.length && (
                                                 <span className="italic">System Event</span>
                                             )}
                                         </div>

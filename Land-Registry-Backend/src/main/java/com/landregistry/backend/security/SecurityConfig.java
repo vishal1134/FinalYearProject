@@ -36,11 +36,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Allow Login/Register
                         .requestMatchers(HttpMethod.GET, "/api/lands/verified").permitAll() // Allow public access to verified lands
+                        .requestMatchers(HttpMethod.POST, "/api/lands").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/lands/my").hasRole("OWNER")
                         .requestMatchers(HttpMethod.GET, "/api/lands/pending").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/lands/*/verify").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/transfers").hasRole("OWNER")
                         .requestMatchers(HttpMethod.GET, "/api/transfers/pending").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/transfers/*/verify-documents").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/transfers/*/approve").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/transfers/*/reject").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/documents").hasAnyRole("OWNER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/documents/*").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -61,7 +67,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Frontend URL
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:5174",
+                "http://127.0.0.1:5174"
+        )); // Frontend dev URLs
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

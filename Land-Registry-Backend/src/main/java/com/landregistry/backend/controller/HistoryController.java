@@ -37,10 +37,27 @@ public class HistoryController {
         if (land.isEmpty()) {
             throw new RuntimeException("Land not found");
         }
+
+        List<LandHistory> history = service.getHistory(landId);
+
         // Allow if user owns the land or is admin
-        if (!land.get().getOwnerId().equals(user.get().getId()) && !userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-            throw new RuntimeException("Unauthorized: You can only view history for your own lands");
+        String userId = user.get().getId();
+        boolean isCurrentOwner = userId.equals(land.get().getOwnerId())
+                || (land.get().getCurrentOwners() != null
+                && land.get().getCurrentOwners().stream().anyMatch(owner -> userId.equals(owner.getUserId())));
+        boolean isHistoryParticipant = history.stream().anyMatch(record ->
+                userId.equals(record.getPreviousOwnerId())
+                        || userId.equals(record.getNewOwnerId())
+                        || (record.getPreviousOwners() != null
+                        && record.getPreviousOwners().stream().anyMatch(owner -> userId.equals(owner.getUserId())))
+                        || (record.getNewOwners() != null
+                        && record.getNewOwners().stream().anyMatch(owner -> userId.equals(owner.getUserId())))
+        );
+        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isCurrentOwner && !isHistoryParticipant && !isAdmin) {
+            throw new RuntimeException("Unauthorized: You can only view history for lands you own or previously owned");
         }
-        return service.getHistory(landId);
+        return history;
     }
 }

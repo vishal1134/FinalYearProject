@@ -1,0 +1,6 @@
+Land-Registry-Backend/target/
+Land-Registry-Backend/.m2/
+Land-Registry-Backend/.idea/
+.vscode/*
+!.vscode/extensions.json
+.codex-run/
