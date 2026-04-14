@@ -10,6 +10,7 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen }) => {
         { id: 'analytics', label: 'Analytics', icon: BarChart, roles: ['ADMIN', 'OWNER', 'PUBLIC'] },
         { id: 'map-view', label: 'Map Search', icon: Map, roles: ['ADMIN', 'OWNER', 'PUBLIC'] },
         { id: 'verify', label: 'Verify Lands', icon: FileCheck, roles: ['ADMIN'] },
+        { id: 'verify-transfers', label: 'Verify Transfers', icon: FileCheck, roles: ['ADMIN'] },
         { id: 'my-lands', label: 'My Lands', icon: FileCheck, roles: ['OWNER'] },
         { id: 'add-land', label: 'Add Land', icon: PlusCircle, roles: ['OWNER'] },
         { id: 'search', label: 'Search Records', icon: Search, roles: ['PUBLIC', 'ADMIN', 'OWNER'] },

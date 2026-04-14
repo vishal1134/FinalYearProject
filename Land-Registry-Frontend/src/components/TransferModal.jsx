@@ -9,7 +9,7 @@ const TransferModal = ({ land, isOpen, onClose, onConfirm }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onConfirm(land.id, { buyerId, salePrice });
+        onConfirm(land.id, { buyerId, salePrice: Number(salePrice) });
         onClose();
     };
 

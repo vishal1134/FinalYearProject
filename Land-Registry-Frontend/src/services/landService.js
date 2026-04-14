@@ -44,3 +44,18 @@ export const initiateTransfer = async (transferData) => {
     const response = await api.post('/transfers', transferData);
     return response.data;
 };
+
+export const getPendingTransfers = async () => {
+    try {
+        const response = await api.get('/transfers/pending');
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching pending transfers", error);
+        return [];
+    }
+};
+
+export const approveTransfer = async (id) => {
+    const response = await api.put(`/transfers/${id}/approve`);
+    return response.data;
+};

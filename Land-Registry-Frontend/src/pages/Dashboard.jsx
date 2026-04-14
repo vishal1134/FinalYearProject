@@ -7,14 +7,30 @@ import MapView from '../components/MapView';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import Chatbot from '../components/Chatbot';
 import TransferModal from '../components/TransferModal';
+import TransferVerificationList from '../components/TransferVerificationList';
 import { useAuth } from '../context/AuthContext';
-import { getAllLands, getMyLands, getPendingLands, registerLand, verifyLand, initiateTransfer } from '../services/landService';
+import { getAllLands, getMyLands, getPendingLands, registerLand, verifyLand, initiateTransfer, getPendingTransfers, approveTransfer } from '../services/landService';
 
 // Fallback Mock Data for demo when backend is offline
 const MOCK_LANDS = [
     { id: '1', surveyNumber: '101/A', village: 'Sriperumbudur', district: 'Kanchipuram', area: 2400, price: 5000000, verified: true, ownerId: '1' },
     { id: '2', surveyNumber: '205/B', village: 'Oragadam', district: 'Kanchipuram', area: 1200, price: 2500000, verified: false, ownerId: '1' },
     { id: '3', surveyNumber: '330/C', village: 'Tambaram', district: 'Chennai', area: 1800, price: 8500000, verified: true, ownerId: '2' }
+];
+
+const MOCK_TRANSFERS = [
+    {
+        id: 't1',
+        landId: '1',
+        surveyNumber: '101/A',
+        village: 'Sriperumbudur',
+        district: 'Kanchipuram',
+        sellerId: '1',
+        buyerId: 'buyer-22',
+        salePrice: 5400000,
+        status: 'PENDING_APPROVAL',
+        requestDate: '2026-04-13 10:00 AM'
+    }
 ];
 
 const StatsCard = ({ title, value, color }) => (
@@ -39,7 +55,8 @@ const Overview = ({ user, lands }) => {
 
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
-    const [lands, setLands] = useState([]); // Start empty, fetch on load
+    const [lands, setLands] = useState([]); // Used for land-based tabs
+    const [pendingTransfers, setPendingTransfers] = useState([]);
     const [selectedLand, setSelectedLand] = useState(null);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -59,6 +76,17 @@ const Dashboard = () => {
                 // 1. Attempt to fetch from Backend API
                 if (user.role === 'ADMIN' && activeTab === 'verify') {
                     data = await getPendingLands();
+                    if (!data || data.length === 0) {
+                        data = MOCK_LANDS.filter(l => !l.verified);
+                    }
+                    setLands(data);
+                    return;
+                }
+
+                if (user.role === 'ADMIN' && activeTab === 'verify-transfers') {
+                    const transfers = await getPendingTransfers();
+                    setPendingTransfers(transfers && transfers.length > 0 ? transfers : MOCK_TRANSFERS);
+                    return;
                 } else if (user.role === 'OWNER' && activeTab === 'my-lands') {
                     data = await getMyLands(currentUserId);
                 } else {
@@ -80,7 +108,11 @@ const Dashboard = () => {
                 setLands(data);
             } catch (err) {
                 console.error("Fetch failed", err);
-                setLands(MOCK_LANDS.filter(l => l.verified));
+                if (activeTab === 'verify-transfers') {
+                    setPendingTransfers(MOCK_TRANSFERS);
+                } else {
+                    setLands(MOCK_LANDS.filter(l => l.verified));
+                }
             } finally {
                 setLoading(false);
             }
@@ -112,6 +144,18 @@ const Dashboard = () => {
             console.warn("Backend unavailable, using mock fallback");
             setLands(lands.map(l => l.id === id ? { ...l, verified: true } : l));
             alert("Land Verified (Mock Mode)!");
+        }
+    };
+
+    const handleApproveTransfer = async (id) => {
+        try {
+            await approveTransfer(id);
+            alert("Transfer Verified (Backend)!");
+            setPendingTransfers(prev => prev.filter(transfer => transfer.id !== id));
+        } catch (e) {
+            console.warn("Backend unavailable, using mock fallback");
+            setPendingTransfers(prev => prev.filter(transfer => transfer.id !== id));
+            alert("Transfer Verified (Mock Mode)!");
         }
     };
 
@@ -163,6 +207,16 @@ const Dashboard = () => {
                                 lands={lands}
                                 role={user?.role}
                                 onVerify={handleVerify}
+                            />
+                        </div>
+                    )}
+
+                    {activeTab === 'verify-transfers' && (
+                        <div className="animate-fade-in">
+                            <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Pending Transfer Verifications</h1>
+                            <TransferVerificationList
+                                transfers={pendingTransfers}
+                                onApprove={handleApproveTransfer}
                             />
                         </div>
                     )}
