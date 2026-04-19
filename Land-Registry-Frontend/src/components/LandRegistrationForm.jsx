@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Upload, MapPin, FileText } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Upload, MapPin, ImageIcon } from 'lucide-react';
 
 const LandRegistrationForm = ({ onSubmit }) => {
     const [formData, setFormData] = useState({
@@ -8,20 +8,39 @@ const LandRegistrationForm = ({ onSubmit }) => {
         village: '',
         area: '',
         price: '',
-        document: null
+        document: null,
+        image: null,
     });
+    const [previewUrl, setPreviewUrl] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0] ?? null;
+        setFormData(prev => ({ ...prev, image: file }));
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit(formData);
-        // Reset or show success
-        alert("Land Registration Request Sent!");
     };
+
+    useEffect(() => {
+        if (!formData.image) {
+            setPreviewUrl('');
+            return;
+        }
+
+        const nextPreviewUrl = URL.createObjectURL(formData.image);
+        setPreviewUrl(nextPreviewUrl);
+
+        return () => {
+            URL.revokeObjectURL(nextPreviewUrl);
+        };
+    }, [formData.image]);
 
     return (
         <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-2xl mx-auto">
@@ -100,6 +119,37 @@ const LandRegistrationForm = ({ onSubmit }) => {
                         <Upload className="w-8 h-8 mb-2 text-gray-400" />
                         <span className="text-sm">Click to upload Sale Deed (PDF/Image)</span>
                     </div>
+                </div>
+
+                <div>
+                    <label htmlFor="land-image" className="block text-sm font-medium text-gray-700 mb-2">Upload Land Image</label>
+                    <label
+                        htmlFor="land-image"
+                        className="border-2 border-dashed border-blue-200 rounded-lg p-6 flex flex-col items-center justify-center text-gray-500 hover:bg-blue-50 transition-colors cursor-pointer"
+                    >
+                        <ImageIcon className="w-8 h-8 mb-2 text-blue-500" />
+                        <span className="text-sm font-medium">
+                            {formData.image ? formData.image.name : 'Choose a land photo to attach to this registration'}
+                        </span>
+                        <span className="text-xs text-gray-400 mt-1">Accepted formats: JPG, PNG, WEBP</span>
+                    </label>
+                    <input
+                        id="land-image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                    />
+
+                    {previewUrl && (
+                        <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+                            <img
+                                src={previewUrl}
+                                alt="Land preview"
+                                className="h-56 w-full object-cover"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <button

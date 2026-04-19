@@ -16,7 +16,7 @@ export const getMyLands = async (ownerId) => {
     try {
         const response = await api.get(`/lands/my?ownerId=${ownerId}`);
         return response.data;
-    } catch (error) {
+    } catch {
         return [];
     }
 };
@@ -25,13 +25,38 @@ export const getPendingLands = async () => {
     try {
         const response = await api.get('/lands/pending');
         return response.data;
-    } catch (error) {
+    } catch {
         return [];
     }
 };
 
 export const registerLand = async (landData) => {
-    const response = await api.post('/lands', landData);
+    const formData = new FormData();
+    const { image, ...landFields } = landData;
+
+    formData.append(
+        'land',
+        new Blob(
+            [
+                JSON.stringify({
+                    ...landFields,
+                    area: Number(landFields.area),
+                    price: Number(landFields.price),
+                }),
+            ],
+            { type: 'application/json' },
+        ),
+    );
+
+    if (image instanceof File) {
+        formData.append('image', image);
+    }
+
+    const response = await api.post('/lands', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
     return response.data;
 };
 

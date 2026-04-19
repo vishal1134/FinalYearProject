@@ -1,6 +1,5 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { useAuth } from '../context/AuthContext';
 
 const AnalyticsDashboard = ({ lands }) => {
     // 1. Data Processing

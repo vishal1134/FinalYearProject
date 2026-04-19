@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import LandRegistrationForm from '../components/LandRegistrationForm';
@@ -8,7 +9,7 @@ import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import Chatbot from '../components/Chatbot';
 import TransferModal from '../components/TransferModal';
 import TransferVerificationList from '../components/TransferVerificationList';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { getAllLands, getMyLands, getPendingLands, registerLand, verifyLand, initiateTransfer, getPendingTransfers, approveTransfer } from '../services/landService';
 
 // Fallback Mock Data for demo when backend is offline
@@ -124,13 +125,13 @@ const Dashboard = () => {
     const handleRegister = async (data) => {
         try {
             await registerLand({ ...data, ownerId: currentUserId });
-            alert("Land Registration Submitted successfully (Backend)!");
+            toast.success("Land registration submitted successfully.");
             setActiveTab('my-lands');
-        } catch (e) {
+        } catch {
             console.warn("Backend unavailable, using mock fallback");
             const newLand = { ...data, id: Date.now().toString(), verified: false, ownerId: currentUserId };
             setLands([...lands, newLand]);
-            alert("Land Registration Submitted (Mock Mode)!");
+            toast.info("Land registration submitted in mock mode.");
             setActiveTab('my-lands');
         }
     };
@@ -138,24 +139,24 @@ const Dashboard = () => {
     const handleVerify = async (id) => {
         try {
             await verifyLand(id);
-            alert("Land Verified (Backend)!");
+            toast.success("Land verified successfully.");
             setLands(prev => prev.filter(l => l.id !== id));
-        } catch (e) {
+        } catch {
             console.warn("Backend unavailable, using mock fallback");
             setLands(lands.map(l => l.id === id ? { ...l, verified: true } : l));
-            alert("Land Verified (Mock Mode)!");
+            toast.info("Land verified in mock mode.");
         }
     };
 
     const handleApproveTransfer = async (id) => {
         try {
             await approveTransfer(id);
-            alert("Transfer Verified (Backend)!");
+            toast.success("Transfer verified successfully.");
             setPendingTransfers(prev => prev.filter(transfer => transfer.id !== id));
-        } catch (e) {
+        } catch {
             console.warn("Backend unavailable, using mock fallback");
             setPendingTransfers(prev => prev.filter(transfer => transfer.id !== id));
-            alert("Transfer Verified (Mock Mode)!");
+            toast.info("Transfer verified in mock mode.");
         }
     };
 
@@ -167,11 +168,11 @@ const Dashboard = () => {
     const onConfirmTransfer = async (landId, transferData) => {
         try {
             await initiateTransfer({ landId, sellerId: currentUserId, ...transferData });
-            alert("Transfer Request Initiated (Backend)!");
+            toast.success("Transfer request initiated successfully.");
             setIsTransferModalOpen(false);
-        } catch (e) {
+        } catch {
             console.warn("Backend unavailable");
-            alert("Transfer Request Initiated (Mock Mode)!");
+            toast.info("Transfer request initiated in mock mode.");
             setIsTransferModalOpen(false);
         }
     };

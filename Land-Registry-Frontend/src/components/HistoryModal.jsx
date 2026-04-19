@@ -7,22 +7,24 @@ const HistoryModal = ({ isOpen, onClose, landId }) => {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (isOpen && landId) {
-            fetchHistory();
-        }
-    }, [isOpen, landId]);
+        const fetchHistory = async () => {
+            if (!isOpen || !landId) {
+                return;
+            }
 
-    const fetchHistory = async () => {
-        setLoading(true);
-        try {
-            const response = await api.get(`/history/${landId}`);
-            setHistory(response.data);
-        } catch (error) {
-            console.error("Failed to fetch history", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+            setLoading(true);
+            try {
+                const response = await api.get(`/history/${landId}`);
+                setHistory(response.data);
+            } catch (error) {
+                console.error("Failed to fetch history", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchHistory();
+    }, [isOpen, landId]);
 
     if (!isOpen) return null;
 

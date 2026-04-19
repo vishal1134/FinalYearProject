@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { LayoutDashboard, FileCheck, PlusCircle, Search, LogOut, Map, BarChart } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, isOpen }) => {

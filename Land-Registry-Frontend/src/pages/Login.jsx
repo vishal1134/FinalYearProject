@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Shield, User, Lock, ArrowRight, Loader } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const Login = () => {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -35,7 +35,7 @@ const Login = () => {
                     nationalId: "123456789" // Dummy ID
                 });
 
-                alert("Registration Successful! Please Login.");
+                toast.success("Registration successful. Please log in.");
                 setIsRegistering(false);
             } else {
                 // Login Logic
@@ -58,12 +58,7 @@ const Login = () => {
                 <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[100px] animate-pulse delay-1000"></div>
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md z-10"
-            >
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md z-10">
                 <div className="text-center mb-8">
                     <div className="flex justify-center mb-4">
                         <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg">
@@ -160,9 +155,9 @@ const Login = () => {
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ email, password: 'admin123' })
                                 }).then(res => {
-                                    if (res.ok) alert("Password reset to 'admin123'. Please login now.");
-                                    else alert("Failed to reset. User not found.");
-                                }).catch(err => alert("Connection Error"));
+                                    if (res.ok) toast.success("Password reset to 'admin123'. Please log in now.");
+                                    else toast.error("Failed to reset password. User not found.");
+                                }).catch(() => toast.error("Connection error while resetting password."));
                             }
                         }}
                         className="text-gray-500 hover:text-white transition-colors text-xs"
@@ -177,7 +172,7 @@ const Login = () => {
                         {isRegistering ? "Already have an account? Login" : "New User? Register here"}
                     </button>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };

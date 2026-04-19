@@ -1,0 +1,16 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.2)
+
+2026-04-18T13:59:09.072+05:30  INFO 26068 --- [land-registry-backend] [           main] c.l.b.LandRegistryBackendApplication     : Starting LandRegistryBackendApplication v0.0.1-SNAPSHOT using Java 17.0.18 with PID 26068 (C:\Users\janan\OneDrive\Documents\FinalYearProject\Land-Registry-Backend\target\backend-0.0.1-SNAPSHOT.jar started by janan in C:\Users\janan\OneDrive\Documents\FinalYearProject\Land-Registry-Backend)
+2026-04-18T13:59:09.086+05:30  INFO 26068 --- [land-registry-backend] [           main] c.l.b.LandRegistryBackendApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-04-18T13:59:09.090+05:30 DEBUG 26068 --- [land-registry-backend] [           main] o.s.boot.SpringApplication               : Loading source class com.landregistry.backend.LandRegistryBackendApplication
+2026-04-18T13:59:09.374+05:30 DEBUG 26068 --- [land-registry-backend] [           main] ConfigServletWebServerApplicationContext : Refreshing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@50313382
+2026-04-18T13:59:10.672+05:30  INFO 26068 --- [land-registry-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data MongoDB repositories in DEFAULT mode.
+2026-04-18T13:59:10.698+05:30 DEBUG 26068 --- [land-registry-backend] [           main] o.s.b.a.AutoConfigurationPackages        : @EnableAutoConfiguration was declared on a class in the package 'com.landregistry.backend'. Automatic @Repository and @Entity scanning is enabled.
+2026-04-18T13:59:10.774+05:30  INFO 26068 --- [land-registry-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 94 ms. Found 4 MongoDB repository interfaces.

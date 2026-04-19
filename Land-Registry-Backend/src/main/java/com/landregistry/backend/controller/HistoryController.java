@@ -1,6 +1,6 @@
 package com.landregistry.backend.controller;
 
-import com.landregistry.backend.model.LandHistory;
+import com.landregistry.backend.dto.LandHistoryResponse;
 import com.landregistry.backend.service.LandHistoryService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ public class HistoryController {
     }
 
     @GetMapping("/{landId}")
-    public List<LandHistory> getLandHistory(@PathVariable String landId) {
+    public List<LandHistoryResponse> getLandHistory(@PathVariable String landId) {
         return service.getHistory(landId);
     }
 }

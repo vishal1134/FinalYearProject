@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { UserCircle, Menu } from 'lucide-react';
 
 const Navbar = ({ onToggleSidebar }) => {

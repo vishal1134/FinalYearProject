@@ -8,6 +8,24 @@ import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
+const DEFAULT_CENTER = [13.0827, 80.2707];
+
+const hashCoordinateOffset = (seed, divisor) => {
+    const hash = Array.from(String(seed ?? 'land')).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return ((hash % divisor) - divisor / 2) / 1000;
+};
+
+const getLandPosition = (land) => {
+    if (land.latitude && land.longitude) {
+        return [land.latitude, land.longitude];
+    }
+
+    return [
+        DEFAULT_CENTER[0] + hashCoordinateOffset(land.id ?? land.surveyNumber, 100),
+        DEFAULT_CENTER[1] + hashCoordinateOffset(land.surveyNumber ?? land.id, 120),
+    ];
+};
+
 let DefaultIcon = L.icon({
     iconUrl: icon,
     shadowUrl: iconShadow,
@@ -18,20 +36,15 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const MapView = ({ lands }) => {
-    // Default center: Chennai coordinates
-    const defaultCenter = [13.0827, 80.2707];
-
     return (
         <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-gray-100 z-0">
-            <MapContainer center={defaultCenter} zoom={10} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
+            <MapContainer center={DEFAULT_CENTER} zoom={10} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 {lands.map((land) => {
-                    // Use actual coords if available, otherwise mock random scatter around Chennai for demo
-                    const lat = land.latitude || (13.08 + (Math.random() - 0.5) * 0.1);
-                    const lng = land.longitude || (80.27 + (Math.random() - 0.5) * 0.1);
+                    const [lat, lng] = getLandPosition(land);
 
                     return (
                         <Marker key={land.id} position={[lat, lng]}>

@@ -17,15 +17,18 @@ public class TransferService {
     private final TransferRequestRepository transferRepository;
     private final LandRepository landRepository;
     private final LandHistoryService landHistoryService;
+    private final FabricGatewayService fabricGatewayService;
 
     public TransferService(
             TransferRequestRepository transferRepository,
             LandRepository landRepository,
-            LandHistoryService landHistoryService
+            LandHistoryService landHistoryService,
+            FabricGatewayService fabricGatewayService
     ) {
         this.transferRepository = transferRepository;
         this.landRepository = landRepository;
         this.landHistoryService = landHistoryService;
+        this.fabricGatewayService = fabricGatewayService;
     }
 
     public TransferRequest initiateTransfer(TransferRequest request) {
@@ -64,11 +67,18 @@ public class TransferService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transfer seller does not match current land owner");
         }
 
+        if (fabricGatewayService.isEnabled()) {
+            fabricGatewayService.transferLand(land.getId(), request.getSellerId(), request.getBuyerId());
+        }
+
         land.setOwnerId(request.getBuyerId());
         land.setPrice(request.getSalePrice());
         landRepository.save(land);
 
-        landHistoryService.logAction(land.getId(), request.getSellerId(), request.getBuyerId(), "TRANSFERRED");
+        if (!fabricGatewayService.isEnabled()) {
+            landHistoryService.logAction(land.getId(), request.getSellerId(), request.getBuyerId(), "TRANSFERRED");
+        }
+
         request.setStatus("APPROVED_AND_COMMITTED");
         return transferRepository.save(request);
     }
