@@ -1,0 +1,36 @@
+# Build outputs
+target/
+dist/
+dist-ssr/
+node_modules/
+.m2/
+
+# Logs and local runtime files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*_sk
+connection-profile*.json
+wallet/
+
+# Local helper files
+temp-settings.xml
+fabric-start-temp.sh
+Land-Registry-Backend/package-lock.json
